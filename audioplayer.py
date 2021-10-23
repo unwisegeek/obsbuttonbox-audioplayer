@@ -1,3 +1,4 @@
+import os
 import paho.mqtt.client as mqtt
 from pydub import AudioSegment
 from pydub.playback import play
@@ -8,10 +9,7 @@ from config import (
     MQTT_AUTH,
 )
 
-SOUNDS_DIR = "."
-SOUNDS = {
-    "horn": {"name": "horn.wav", "ext": "wav"},
-}
+SOUNDS_DIR = "./sounds/"
 
 def on_connect(client, userdata, flags, rc):
     print(f"Connected to MQTT broker with result: {str(rc)}.")
@@ -30,9 +28,42 @@ def on_message(client, userdata, msg):
                 )
             play(sound)
 
+def keycount(file_key, SOUNDS):
+    keycount = 0
+    for key in SOUNDS.keys():
+        if file_key == key.split('-')[0]:
+            keycount += 1
+    return keycount
+
+
+
 mqtt_client = mqtt.Client()
 mqtt_client.on_connect = on_connect
 mqtt_client.on_message = on_message
+
+
+
+SOUNDS = {}
+ALLOWED_FORMATS = ('mp3', 'wav', 'aac', 'ogg')
+file_ext = ""
+keylist = []
+keydict = {}
+# # Build SOUNDS dictionary
+for file in os.listdir(SOUNDS_DIR):
+    # "horn":
+    #   "name": "horn",
+    #   "ext": "wav",
+
+    filename = file.split('.')
+    if filename[len(filename) - 1] in ALLOWED_FORMATS:
+        file_key = filename[0].split('-')[0]
+        file_ext = filename[len(filename) - 1]
+        if keycount(file_key, SOUNDS) == 0:
+            SOUNDS[f"{file_key}-0"] = {file, file_ext}
+        else:
+            SOUNDS[f"{file_key}-{len(SOUNDS)}"] = {file, file_ext}
+
+print(SOUNDS)
 
 if MQTT_AUTH == None:
     mqtt_client.username_pw_set(
