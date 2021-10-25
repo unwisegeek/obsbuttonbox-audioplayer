@@ -1,5 +1,6 @@
 import os
 import paho.mqtt.client as mqtt
+import paho.mqtt.publish as publish
 from pydub import AudioSegment
 from pydub.playback import play
 import json
@@ -21,10 +22,10 @@ def on_message(client, userdata, msg):
     command = json.loads(message)
     print(f"Processing message from MQTT: [{str(msg.topic)}] {message}")
     if ("snd") in command.keys():
-        if command["snd"] in SOUNDS:
+        if command["snd"] in SOUNDS.keys():
             sound = AudioSegment.from_file(
                 f"{SOUNDS_DIR}/{SOUNDS[command['snd']]['name']}",
-                SOUNDS[command["snd"]]["ext"]
+                SOUNDS[command["snd"]]['ext']
                 )
             play(sound)
 
@@ -59,11 +60,25 @@ for file in os.listdir(SOUNDS_DIR):
         file_key = filename[0].split('-')[0]
         file_ext = filename[len(filename) - 1]
         if keycount(file_key, SOUNDS) == 0:
-            SOUNDS[f"{file_key}-0"] = {file, file_ext}
+            SOUNDS[f"{file_key}-0"] = {'name': file, 'ext': file_ext}
         else:
-            SOUNDS[f"{file_key}-{len(SOUNDS)}"] = {file, file_ext}
+            SOUNDS[f"{file_key}-{len(SOUNDS)}"] = {'name': file, 'ext': file_ext}
 
-print(SOUNDS)
+publish.single(
+    'buttonbox-sounds', 
+    str(list(SOUNDS.keys())),
+    qos=0, 
+    retain=True, 
+    hostname='homeassistant.lan', 
+    port=1883, 
+    client_id="", 
+    keepalive=60,
+    will=None,
+    auth=MQTT_AUTH,
+    tls=None,
+    protocol=mqtt.MQTTv311,
+    transport="tcp",
+    )
 
 if MQTT_AUTH == None:
     mqtt_client.username_pw_set(
