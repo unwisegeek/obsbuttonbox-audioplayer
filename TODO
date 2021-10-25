@@ -1,3 +1,3 @@
 [X] - Set up a config file that does not go to git with my password
-[ ] - Publish a list of available sounds to ActiveMQ topic
-[ ] - Dynamically load and name sounds from a directory
+[X] - Publish a list of available sounds to ActiveMQ topic
+[X] - Dynamically load and name sounds from a directory
