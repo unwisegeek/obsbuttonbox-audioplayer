@@ -64,9 +64,16 @@ for file in os.listdir(SOUNDS_DIR):
         else:
             SOUNDS[f"{file_key}-{len(SOUNDS)}"] = {'name': file, 'ext': file_ext}
 
+sound_list = ""
+sound_cnt = 0
+for key in SOUNDS.keys():
+    sound_cnt += 1
+    value = f"{key}," if sound_cnt < len(SOUNDS.keys()) else f"{key}"
+    sound_list += value
+
 publish.single(
     'buttonbox-sounds', 
-    str(list(SOUNDS.keys())),
+    sound_list,
     qos=0, 
     retain=True, 
     hostname='homeassistant.lan', 
