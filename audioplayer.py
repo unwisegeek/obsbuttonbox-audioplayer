@@ -20,6 +20,7 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
     message = str(msg.payload.decode('utf-8'))
     command = json.loads(message)
+    SOUNDS = refresh_sounds()
     print(f"Processing message from MQTT: [{str(msg.topic)}] {message}")
     if ("snd") in command.keys():
         if command["snd"] in SOUNDS.keys():
@@ -80,7 +81,7 @@ def refresh_sounds():
         protocol=mqtt.MQTTv311,
         transport="tcp",
         )
-
+    return SOUNDS
 
 
 mqtt_client = mqtt.Client()
