@@ -27,7 +27,12 @@ def on_message(client, userdata, msg):
                 f"{SOUNDS_DIR}/{SOUNDS[command['snd']]['name']}",
                 SOUNDS[command["snd"]]['ext']
                 )
-            play(sound)
+            try:
+                play(sound)
+            except FileNotFoundError:
+                pass
+    if ("refresh") in command.keys():
+        refresh_sounds
 
 def keycount(file_key, SOUNDS):
     keycount = 0
@@ -36,56 +41,51 @@ def keycount(file_key, SOUNDS):
             keycount += 1
     return keycount
 
+def refresh_sounds():
+    SOUNDS = {}
+    ALLOWED_FORMATS = ('mp3', 'wav', 'aac', 'ogg')
+    file_ext = ""
+    keylist = []
+    keydict = {}
+    # # Build SOUNDS dictionary
+    for file in os.listdir(SOUNDS_DIR):
+        filename = file.split('.')
+        if filename[len(filename) - 1] in ALLOWED_FORMATS:
+            file_key = filename[0].split('-')[0]
+            file_ext = filename[len(filename) - 1]
+            if keycount(file_key, SOUNDS) == 0:
+                SOUNDS[f"{file_key}-0"] = {'name': file, 'ext': file_ext}
+            else:
+                SOUNDS[f"{file_key}-{len(SOUNDS)}"] = {'name': file, 'ext': file_ext}
+
+    sound_list = ""
+    sound_cnt = 0
+    for key in SOUNDS.keys():
+        sound_cnt += 1
+        value = f"{key}," if sound_cnt < len(SOUNDS.keys()) else f"{key}"
+        sound_list += value
+
+    publish.single(
+        'buttonbox-sounds', 
+        sound_list,
+        qos=0, 
+        retain=True, 
+        hostname='homeassistant.lan', 
+        port=1883, 
+        client_id="", 
+        keepalive=60,
+        will=None,
+        auth=MQTT_AUTH,
+        tls=None,
+        protocol=mqtt.MQTTv311,
+        transport="tcp",
+        )
+
 
 
 mqtt_client = mqtt.Client()
 mqtt_client.on_connect = on_connect
 mqtt_client.on_message = on_message
-
-
-
-SOUNDS = {}
-ALLOWED_FORMATS = ('mp3', 'wav', 'aac', 'ogg')
-file_ext = ""
-keylist = []
-keydict = {}
-# # Build SOUNDS dictionary
-for file in os.listdir(SOUNDS_DIR):
-    # "horn":
-    #   "name": "horn",
-    #   "ext": "wav",
-
-    filename = file.split('.')
-    if filename[len(filename) - 1] in ALLOWED_FORMATS:
-        file_key = filename[0].split('-')[0]
-        file_ext = filename[len(filename) - 1]
-        if keycount(file_key, SOUNDS) == 0:
-            SOUNDS[f"{file_key}-0"] = {'name': file, 'ext': file_ext}
-        else:
-            SOUNDS[f"{file_key}-{len(SOUNDS)}"] = {'name': file, 'ext': file_ext}
-
-sound_list = ""
-sound_cnt = 0
-for key in SOUNDS.keys():
-    sound_cnt += 1
-    value = f"{key}," if sound_cnt < len(SOUNDS.keys()) else f"{key}"
-    sound_list += value
-
-publish.single(
-    'buttonbox-sounds', 
-    sound_list,
-    qos=0, 
-    retain=True, 
-    hostname='homeassistant.lan', 
-    port=1883, 
-    client_id="", 
-    keepalive=60,
-    will=None,
-    auth=MQTT_AUTH,
-    tls=None,
-    protocol=mqtt.MQTTv311,
-    transport="tcp",
-    )
 
 if MQTT_AUTH == None:
     mqtt_client.username_pw_set(
