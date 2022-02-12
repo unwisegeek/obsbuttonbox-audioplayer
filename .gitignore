@@ -2,6 +2,11 @@
 config.py
 audiotester.py
 
+# Audio Files
+*.wav
+*.mp3
+*.ogg
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
