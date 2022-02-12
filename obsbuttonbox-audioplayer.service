@@ -1,0 +1,14 @@
+[Unit]
+Description=OBS Buttonbox Soundboard
+AssertPathExists=/home/john/Projects/obsbuttonbox/obsbuttonbox-audioplayer
+
+[Service]
+Type=simple
+Environment="XDG_RUNTIME_DIR=/run/user/1000"
+Environment="PULSE_RUNTIME_PATH=/run/user/1000/pulse/"
+WorkingDirectory=/home/john/Projects/obsbuttonbox/obsbuttonbox-audioplayer/
+ExecStart=/home/john/Projects/obsbuttonbox/obsbuttonbox-audioplayer/venv/bin/python3 audioplayer.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
